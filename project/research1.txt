@@ -1,0 +1,663 @@
+import hashlib
+import json
+from datetime import datetime
+import uuid
+
+# Blockchain Class
+class CertificateBlockchain:
+    def __init__(self):
+        self.chain = []
+        self.create_block(previous_hash='0', data="Genesis Block")
+
+    def create_block(self, previous_hash, data):
+        block = {
+            'index': len(self.chain) + 1,
+            'timestamp': str(datetime.now()),
+            'certificate_id': str(uuid.uuid4()),  # Generate unique ID for certificates
+            'data': data,
+            'previous_hash': previous_hash,
+            'hash': None
+        }
+        block['hash'] = self.calculate_hash(block)
+        self.chain.append(block)
+        return block
+
+    def calculate_hash(self, block):
+        encoded_block = json.dumps(block, sort_keys=True).encode()
+        return hashlib.sha256(encoded_block).hexdigest()
+
+    def get_previous_block(self):
+        return self.chain[-1]
+
+    def is_chain_valid(self):
+        for i in range(1, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i - 1]
+
+            # Verify current hash
+            if current_block['hash'] != self.calculate_hash(current_block):
+                return False
+            # Verify previous hash
+            if current_block['previous_hash'] != previous_block['hash']:
+                return False
+        return True
+
+    def display_chain(self):
+        for block in self.chain:
+            print(json.dumps(block, indent=4))
+
+    # Function to add certificates
+    def add_certificate(self, student_name, course_name, date_issued):
+        certificate_data = {
+            "student_name": student_name,
+            "course_name": course_name,
+            "date_issued": date_issued
+        }
+        previous_block = self.get_previous_block()
+        new_block = self.create_block(previous_hash=previous_block['hash'], data=certificate_data)
+        print(f"Certificate Added: {new_block['certificate_id']}")
+        return new_block['certificate_id']
+    
+    # Function to validate a certificate
+    def validate_certificate(self, certificate_id):
+        for block in self.chain:
+            if block['certificate_id'] == certificate_id:
+                print("Certificate Found!")
+                print(json.dumps(block, indent=4))
+                return True
+        print("Certificate Not Found!")
+        return False
+
+# Main Execution
+if __name__ == "__main__":
+    # Initialize the blockchain
+    certificate_chain = CertificateBlockchain()
+    
+    # Adding Certificates
+    cert1_id = certificate_chain.add_certificate("Alice Johnson", "Blockchain Basics", "2024-06-01")
+    cert2_id = certificate_chain.add_certificate("Bob Smith", "Advanced Python", "2024-06-02")
+    
+    # Display the blockchain
+    print("\n--- Blockchain Data ---")
+    certificate_chain.display_chain()
+    
+    # Validate Certificates
+    print("\n--- Certificate Validation ---")
+    certificate_chain.validate_certificate(cert1_id)  # Valid ID
+    certificate_chain.validate_certificate("invalid-id")  # Invalid ID
+
+
+create a python code for certificate validation with blockchain and smart contract
+* create an interface of the certificate uploaded : if the name and type typed are the same of the exist certificate show error "values almost exist"; if the format uploaded is note image or pdf : show "bad format".
+* Create the QR code of the certificate uploded
+form will contain :
+* full name
+* Diploma
+* Diploma type
+* age autofill take today - date selected on birthday
+* birth date select the date use tkcalendar
+* school for obtaining diploma
+* date of beginschool select the date use tkcalendar
+* dateof en school select the date use tkcalendar
+* space where to show the image of each certificate uploaded when you click on it in the table. after licking in one of the list in the table show the certificate image in the forms.
+* space where to show the hash code of  certificate uploaded when you click on it in the table.
+* on the form create space where that shows QR code of certificate uploaded 
+* space of table where it shows  the list of all the certificated uploaded range by name or by date of his uploaded
+ * add three buttons
+button1 :  upload certificate after uploading certificate clean the form, and after clicking on the name in the table show the image and the details in the form.
+button 2 :  show or hide certification uploded it shows or hide image certificate in the forms when it is hidden show only his qr code
+* show  hash code of certification uploded the hash code of image is shown in the table of details
+
+
+*messages :- thank you for uploading your certificate if is valide
+         - invalid certificate when is not format (img,jpg,pdf,tif,...)
+         - fill all the requiered case when you click on upload or show certificate when you have not yet fill all the form or when you do not select one of the list shown on the form.
+*  for uploading certificate openfile where is the certificate in the laptop and create an other folder where the certificate uploaded is saved
+The table that diplay data of certificate has: 
+- full name
+- certificate type
+- date of uploading
+-  hash code created by this uploading.
+create one file that contain all the code
+expalain the steps by step how to create code and how they work
+
+
+
+
+================================================================================================================================================
+import hashlib
+import json
+import uuid
+from datetime import datetime
+
+class CertificateBlockchain:
+    def __init__(self):
+        self.chain = []
+        self.create_block(previous_hash="0", data="Genesis Block")
+
+    def create_block(self, previous_hash, data):
+        """Create a new block with the certificate data."""
+        block = {
+            'index': len(self.chain) + 1,
+            'timestamp': str(datetime.now()),
+            'certificate_id': str(uuid.uuid4()),  # Unique ID for the certificate
+            'data': data,
+            'previous_hash': previous_hash,
+            'hash': None
+        }
+        block['hash'] = self.calculate_hash(block)
+        self.chain.append(block)
+        return block
+
+    def calculate_hash(self, block):
+        """Calculate the SHA-256 hash for the block."""
+        encoded_block = json.dumps(block, sort_keys=True).encode()
+        return hashlib.sha256(encoded_block).hexdigest()
+
+    def is_duplicate_certificate(self, certificate_data):
+        """Check if a certificate already exists in the blockchain."""
+        for block in self.chain:
+            if block['data'] == certificate_data:
+                return True
+        return False
+
+    def display_chain(self):
+        """Print all blocks in the blockchain."""
+        for block in self.chain:
+            print(json.dumps(block, indent=4))
+
+=========================================================
+# Certificate Table
+columns = ("Name", "Diploma", "Upload Date")
+self.treeview = ttk.Treeview(self.root, columns=columns, show="headings", height=10)  # Set height for rows
+self.treeview.heading("Name", text="Full Name")
+self.treeview.heading("Diploma", text="Diploma")
+self.treeview.heading("Upload Date", text="Upload Date")
+
+# Adjust column widths
+self.treeview.column("Name", width=120)  # Width in pixels for Name
+self.treeview.column("Diploma", width=120)  # Width in pixels for Diploma
+self.treeview.column("Upload Date", width=110)  # Width in pixels for Upload Date
+
+self.treeview.grid(row=9, column=0, columnspan=4, padx=10, pady=10)  # Add padding
+self.treeview.bind("<ButtonRelease-1>", self.display_certificate_details)
+
+
+
+========================================================================================================================================
+
+import hashlib
+import json
+import uuid
+from datetime import datetime
+import os
+import qrcode
+import shutil
+import tkinter as tk
+from tkinter import messagebox, filedialog, ttk
+from tkcalendar import DateEntry
+from PIL import Image, ImageTk
+
+# Blockchain Class
+class CertificateBlockchain:
+    def __init__(self):
+        self.chain = []
+        self.create_block(previous_hash="0", data="Genesis Block")
+
+    def create_block(self, previous_hash, data):
+        """Create a new block with the certificate data."""
+        block = {
+            'index': len(self.chain) + 1,
+            'timestamp': str(datetime.now()),
+            'certificate_id': str(uuid.uuid4()),
+            'data': data,
+            'previous_hash': previous_hash,
+            'hash': None
+        }
+        block['hash'] = self.calculate_hash(block)
+        self.chain.append(block)
+        return block
+
+    def calculate_hash(self, block):
+        """Calculate the SHA-256 hash for the block."""
+        encoded_block = json.dumps(block, sort_keys=True).encode()
+        return hashlib.sha256(encoded_block).hexdigest()
+
+    def is_duplicate_certificate(self, certificate_data):
+        """Check if a certificate already exists in the blockchain."""
+        for block in self.chain:
+            if block['data'] == certificate_data:
+                return True
+        return False
+
+# Certificate Application Class
+class CertificateApp:
+    def __init__(self, root, blockchain):
+        self.root = root
+        self.root.title("Certificate Validation System")
+        self.root.geometry("1200x780")
+        self.root.configure(bg="cyan")
+        self.blockchain = blockchain
+
+        self.certificates = []  # To store the uploaded certificate information
+        self.upload_folder = "uploaded_certificates"  # Folder where certificates will be saved
+        os.makedirs(self.upload_folder, exist_ok=True)  # Create folder if it doesn't exist
+
+        # Image Placeholder
+        self.current_image = None
+        self.image_visible = True
+
+        # Create the form
+        self.create_form()
+
+    def create_form(self):
+        """Create the form for entering certificate details."""
+        # Full name input
+        tk.Label(self.root, text="Nom Complet:",font=("Times New Roman", 15),bg="cyan").grid(row=0, column=0,)
+        self.full_name = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15))
+        self.full_name.grid(row=0, column=1, pady=10, padx=10)
+
+        # Diploma input
+        tk.Label(self.root, text="Diplome Obtenu:",font=("Times New Roman", 15),bg="cyan").grid(row=1, column=0)
+        self.diploma = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15))
+        self.diploma.grid(row=1, column=1, pady=10, padx=10)
+
+        # Diploma type input
+        tk.Label(self.root, text="Domaine:",font=("Times New Roman", 15),bg="cyan").grid(row=2, column=0)
+        self.diploma_type = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15))
+        self.diploma_type.grid(row=2, column=1, pady=10, padx=10)
+
+        # Birth date input with Age autofill
+        tk.Label(self.root, text="Date de Naissance:",font=("Times New Roman", 15),bg="cyan").grid(row=3, column=0)
+        self.birth_date = DateEntry(self.root,width=18,bg="cyan",font=("Times New Roman", 15), date_pattern="yyyy-mm-dd")
+        self.birth_date.grid(row=3, column=1, pady=10, padx=10)
+        self.birth_date.bind("<<DateEntrySelected>>", self.calculate_age)
+
+        # Age field
+        tk.Label(self.root, text="Age:",font=("Times New Roman", 15),bg="cyan").grid(row=4, column=0)
+        self.age = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15), state="readonly")
+        self.age.grid(row=4, column=1, pady=10, padx=10)
+
+        # School information
+        tk.Label(self.root, text="Nom de l'ecole:",font=("Times New Roman", 15),bg="cyan").grid(row=5, column=0)
+        self.school_name = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15))
+        self.school_name.grid(row=5, column=1, pady=10, padx=10)
+
+        tk.Label(self.root, text="Date Début:",font=("Times New Roman", 15),bg="cyan").grid(row=6, column=0)
+        self.start_date = DateEntry(self.root,width=18,bg="cyan",font=("Times New Roman", 15), date_pattern="yyyy-mm-dd")
+        self.start_date.grid(row=6, column=1, pady=10, padx=10)
+
+        tk.Label(self.root, text="Date Fin:",font=("Times New Roman", 15),bg="cyan").grid(row=7, column=0)
+        self.end_date = DateEntry(self.root,width=18,bg="cyan",font=("Times New Roman", 15), date_pattern="yyyy-mm-dd")
+        self.end_date.grid(row=7, column=1, pady=10, padx=10)
+
+        # Certificate Image Display
+        self.image_label = tk.Label(self.root, text="No Image", bg="grey", width=40, height=10)
+        self.image_label.grid(row=0, column=3, rowspan=4, padx=10)
+
+        # QR Code Display
+        self.qr_label = tk.Label(self.root, text="QR Code", bg="white", width=40, height=10)
+        self.qr_label.grid(row=4, column=3, rowspan=4, padx=10)
+
+        # Upload certificate button
+        self.upload_btn = tk.Button(self.root, text="Upload Certificate", fg ="red",width=15,font=("Times New Roman", 15,"bold"),bg="black",command=self.upload_certificate)
+        self.upload_btn.grid(row=8, column=0, columnspan=2,pady=10, padx=10)
+
+        # Toggle Image Button
+        self.toggle_image_btn = tk.Button(self.root, text="Show/Hide Certificate Image", fg ="red",width=25,font=("Times New Roman", 15,"bold"),bg="green", command=self.toggle_image)
+        self.toggle_image_btn.grid(row=8, column=2)
+
+        # Exit Button
+        self.exit_btn = tk.Button(self.root, text="Exit", fg ="black",width=15,font=("Times New Roman", 15,"bold"),bg="red", command=self.root.quit)
+        self.exit_btn.grid(row=8, column=3)
+
+        # Certificate Table
+        # Certificate Table
+        columns = ("Name", "Diploma", "Upload Date")
+        self.treeview = ttk.Treeview(self.root, columns=columns, show="headings", height=10)  # Set height for rows
+        self.treeview.heading("Name", text="Full Name")
+        self.treeview.heading("Diploma", text="Diploma")
+        self.treeview.heading("Upload Date", text="Upload Date")
+        
+        # Adjust column widths
+        self.treeview.column("Name", width=300)
+        self.treeview.column("Diploma", width=300)
+        self.treeview.column("Upload Date", width=300)
+        
+        self.treeview.grid(row=9, column=0, columnspan=4, padx=10, pady=10)
+        self.treeview.bind("<ButtonRelease-1>", self.display_certificate_details)
+
+
+    def calculate_age(self, event):
+        """Calculate age from the selected birthdate."""
+        birth_date = self.birth_date.get_date()
+        today = datetime.today().date()
+        age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        self.age.config(state="normal")
+        self.age.delete(0, tk.END)
+        self.age.insert(0, str(age))
+        self.age.config(state="readonly")
+
+    def upload_certificate(self):
+        """Upload the certificate and add it to the blockchain."""
+        # Validate inputs
+        full_name = self.full_name.get()
+        diploma = self.diploma.get()
+        if not full_name or not diploma:
+            messagebox.showerror("Error", "Fill all required fields!")
+            return
+
+        cert_file = filedialog.askopenfilename(title="Select Certificate File", filetypes=[("Image Files", "*.jpg;*.png")])
+        if not cert_file:
+            messagebox.showerror("Error", "No certificate file selected!")
+            return
+
+        # Copy certificate to upload folder
+        cert_filename = os.path.basename(cert_file)
+        dest_path = os.path.join(self.upload_folder, cert_filename)
+        shutil.copy(cert_file, dest_path)
+
+        # Generate and save QR code
+        qr = qrcode.make(dest_path)
+        qr_path = os.path.join(self.upload_folder, f"{full_name}_qr.png")
+        qr.save(qr_path)
+
+        # Add certificate to blockchain
+        certificate_data = {
+            "full_name": full_name,
+            "diploma": diploma,
+            "file_path": dest_path,
+            "qr_path": qr_path
+        }
+        self.blockchain.create_block(self.blockchain.chain[-1]['hash'], certificate_data)
+
+        # Add to table
+        self.treeview.insert("", "end", values=(full_name, diploma, str(datetime.now().date())))
+        messagebox.showinfo("Success", "Certificate uploaded successfully!")
+
+    def display_certificate_details(self, event):
+        """Display image and QR code for selected certificate."""
+        selected_item = self.treeview.selection()[0]
+        full_name = self.treeview.item(selected_item, 'values')[0]
+        
+        # Safely iterate and check for valid data
+        cert = next(
+            (b['data'] for b in self.blockchain.chain 
+             if isinstance(b['data'], dict) and b['data'].get('full_name') == full_name),
+            None
+        )
+        
+        if cert:
+            # Display certificate image
+            img = Image.open(cert['file_path']).resize((200, 150))
+            self.current_image = ImageTk.PhotoImage(img)
+            self.image_label.config(image=self.current_image, text="")
+            
+            # Display QR code
+            qr_img = Image.open(cert['qr_path']).resize((200, 150))
+            self.current_qr = ImageTk.PhotoImage(qr_img)
+            self.qr_label.config(image=self.current_qr, text="")
+        else:
+            messagebox.showerror("Error", "Certificate details not found.")
+
+    def toggle_image(self):
+        """Toggle visibility of the certificate image."""
+        if self.image_visible:
+            self.image_label.config(image="", text="No Image")
+        else:
+            selected_item = self.treeview.selection()
+            if selected_item:
+                self.display_certificate_details(None)
+        self.image_visible = not self.image_visible
+
+# Main execution
+if __name__ == "__main__":
+    root = tk.Tk()
+    blockchain = CertificateBlockchain()
+    app = CertificateApp(root, blockchain)
+    root.mainloop()
+
+
+* add option of zoom when of the image of certificate  when you click on show button  
+ * add also the button to show and hide qr code
+set picture inteface to 250*200
+set qr interface to 250 * 200 
+import hashlib
+import json
+import uuid
+from datetime import datetime
+import os
+import qrcode
+import shutil
+import tkinter as tk
+from tkinter import messagebox, filedialog, ttk
+from tkcalendar import DateEntry
+from PIL import Image, ImageTk
+
+# Blockchain Class
+class CertificateBlockchain:
+    def __init__(self):
+        self.chain = []
+        self.create_block(previous_hash="0", data="Genesis Block")
+
+    def create_block(self, previous_hash, data):
+        """Create a new block with the certificate data."""
+        block = {
+            'index': len(self.chain) + 1,
+            'timestamp': str(datetime.now()),
+            'certificate_id': str(uuid.uuid4()),
+            'data': data,
+            'previous_hash': previous_hash,
+            'hash': None
+        }
+        block['hash'] = self.calculate_hash(block)
+        self.chain.append(block)
+        return block
+
+    def calculate_hash(self, block):
+        """Calculate the SHA-256 hash for the block."""
+        encoded_block = json.dumps(block, sort_keys=True).encode()
+        return hashlib.sha256(encoded_block).hexdigest()
+
+    def is_duplicate_certificate(self, certificate_data):
+        """Check if a certificate already exists in the blockchain."""
+        for block in self.chain:
+            if block['data'] == certificate_data:
+                return True
+        return False
+
+# Certificate Application Class
+class CertificateApp:
+    def __init__(self, root, blockchain):
+        self.root = root
+        self.root.title("Certificate Validation System")
+        self.root.geometry("1200x780")
+        self.root.configure(bg="cyan")
+        self.blockchain = blockchain
+
+        self.certificates = []  # To store the uploaded certificate information
+        self.upload_folder = "uploaded_certificates"  # Folder where certificates will be saved
+        os.makedirs(self.upload_folder, exist_ok=True)  # Create folder if it doesn't exist
+
+        # Image Placeholder
+        self.current_image = None
+        self.image_visible = True
+
+        # Create the form
+        self.create_form()
+
+    def create_form(self):
+        """Create the form for entering certificate details."""
+        # Full name input
+        tk.Label(self.root, text="Nom Complet:",font=("Times New Roman", 15),bg="cyan").grid(row=0, column=0,)
+        self.full_name = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15))
+        self.full_name.grid(row=0, column=1, pady=10, padx=10)
+
+        # Diploma input
+        tk.Label(self.root, text="Diplome Obtenu:",font=("Times New Roman", 15),bg="cyan").grid(row=1, column=0)
+        self.diploma = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15))
+        self.diploma.grid(row=1, column=1, pady=10, padx=10)
+
+        # Diploma type input
+        tk.Label(self.root, text="Domaine:",font=("Times New Roman", 15),bg="cyan").grid(row=2, column=0)
+        self.diploma_type = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15))
+        self.diploma_type.grid(row=2, column=1, pady=10, padx=10)
+
+        # Birth date input with Age autofill
+        tk.Label(self.root, text="Date de Naissance:",font=("Times New Roman", 15),bg="cyan").grid(row=3, column=0)
+        self.birth_date = DateEntry(self.root,width=18,bg="cyan",font=("Times New Roman", 15), date_pattern="yyyy-mm-dd")
+        self.birth_date.grid(row=3, column=1, pady=10, padx=10)
+        self.birth_date.bind("<<DateEntrySelected>>", self.calculate_age)
+
+        # Age field
+        tk.Label(self.root, text="Age:",font=("Times New Roman", 15),bg="cyan").grid(row=4, column=0)
+        self.age = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15), state="readonly")
+        self.age.grid(row=4, column=1, pady=10, padx=10)
+
+        # School information
+        tk.Label(self.root, text="Nom de l'ecole:",font=("Times New Roman", 15),bg="cyan").grid(row=5, column=0)
+        self.school_name = tk.Entry(self.root,width=20,bg="cyan",font=("Times New Roman", 15))
+        self.school_name.grid(row=5, column=1, pady=10, padx=10)
+
+        tk.Label(self.root, text="Date Début:",font=("Times New Roman", 15),bg="cyan").grid(row=6, column=0)
+        self.start_date = DateEntry(self.root,width=18,bg="cyan",font=("Times New Roman", 15), date_pattern="yyyy-mm-dd")
+        self.start_date.grid(row=6, column=1, pady=10, padx=10)
+
+        tk.Label(self.root, text="Date Fin:",font=("Times New Roman", 15),bg="cyan").grid(row=7, column=0)
+        self.end_date = DateEntry(self.root,width=18,bg="cyan",font=("Times New Roman", 15), date_pattern="yyyy-mm-dd")
+        self.end_date.grid(row=7, column=1, pady=10, padx=10)
+
+        # Certificate Image Display
+        self.image_label = tk.Label(self.root, text="No Image", bg="grey", width=40, height=10)
+        self.image_label.grid(row=0, column=3, rowspan=4, padx=10)
+
+        # QR Code Display
+        self.qr_label = tk.Label(self.root, text="QR Code", bg="white", width=40, height=10)
+        self.qr_label.grid(row=4, column=3, rowspan=4, padx=10)
+
+        # Upload certificate button
+        self.upload_btn = tk.Button(self.root, text="Upload Certificate", fg ="red",width=15,font=("Times New Roman", 15,"bold"),bg="black",command=self.upload_certificate)
+        self.upload_btn.grid(row=8, column=0, columnspan=2,pady=10, padx=10)
+
+        # Toggle Image Button
+        self.toggle_image_btn = tk.Button(self.root, text="Show/Hide Certificate Image", fg ="red",width=25,font=("Times New Roman", 15,"bold"),bg="green", command=self.toggle_image)
+        self.toggle_image_btn.grid(row=8, column=2)
+
+        # Exit Button
+        self.exit_btn = tk.Button(self.root, text="Exit", fg ="black",width=15,font=("Times New Roman", 15,"bold"),bg="red", command=self.root.quit)
+        self.exit_btn.grid(row=8, column=3)
+
+        # Certificate Table
+        # Certificate Table
+        columns = ("Name", "Diploma", "Upload Date")
+        self.treeview = ttk.Treeview(self.root, columns=columns, show="headings", height=10)  # Set height for rows
+        self.treeview.heading("Name", text="Full Name")
+        self.treeview.heading("Diploma", text="Diploma")
+        self.treeview.heading("Upload Date", text="Upload Date")
+        
+        # Adjust column widths
+        self.treeview.column("Name", width=300)
+        self.treeview.column("Diploma", width=300)
+        self.treeview.column("Upload Date", width=300)
+        
+        self.treeview.grid(row=9, column=0, columnspan=4, padx=10, pady=10)
+        self.treeview.bind("<ButtonRelease-1>", self.display_certificate_details)
+
+
+    def calculate_age(self, event):
+        """Calculate age from the selected birthdate."""
+        birth_date = self.birth_date.get_date()
+        today = datetime.today().date()
+        age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        self.age.config(state="normal")
+        self.age.delete(0, tk.END)
+        self.age.insert(0, str(age))
+        self.age.config(state="readonly")
+
+    def upload_certificate(self):
+        """Upload the certificate and add it to the blockchain."""
+        # Validate inputs
+        full_name = self.full_name.get()
+        diploma = self.diploma.get()
+        if not full_name or not diploma:
+            messagebox.showerror("Error", "Fill all required fields!")
+            return
+
+        cert_file = filedialog.askopenfilename(title="Select Certificate File", filetypes=[("Image Files", "*.jpg;*.png")])
+        if not cert_file:
+            messagebox.showerror("Error", "No certificate file selected!")
+            return
+
+        # Copy certificate to upload folder
+        cert_filename = os.path.basename(cert_file)
+        dest_path = os.path.join(self.upload_folder, cert_filename)
+        shutil.copy(cert_file, dest_path)
+
+        # Generate and save QR code
+        qr = qrcode.make(dest_path)
+        qr_path = os.path.join(self.upload_folder, f"{full_name}_qr.png")
+        qr.save(qr_path)
+
+        # Add certificate to blockchain
+        certificate_data = {
+            "full_name": full_name,
+            "diploma": diploma,
+            "file_path": dest_path,
+            "qr_path": qr_path
+        }
+        self.blockchain.create_block(self.blockchain.chain[-1]['hash'], certificate_data)
+
+        # Add to table
+        self.treeview.insert("", "end", values=(full_name, diploma, str(datetime.now().date())))
+        messagebox.showinfo("Success", "Certificate uploaded successfully!")
+
+    def display_certificate_details(self, event):
+        """Display image and QR code for selected certificate."""
+        selected_item = self.treeview.selection()[0]
+        full_name = self.treeview.item(selected_item, 'values')[0]
+        
+        # Safely iterate and check for valid data
+        cert = next(
+            (b['data'] for b in self.blockchain.chain 
+             if isinstance(b['data'], dict) and b['data'].get('full_name') == full_name),
+            None
+        )
+        
+        if cert:
+            # Display certificate image
+            img = Image.open(cert['file_path']).resize((200, 150))
+            self.current_image = ImageTk.PhotoImage(img)
+            self.image_label.config(image=self.current_image, text="")
+            
+            # Display QR code
+            qr_img = Image.open(cert['qr_path']).resize((200, 150))
+            self.current_qr = ImageTk.PhotoImage(qr_img)
+            self.qr_label.config(image=self.current_qr, text="")
+        else:
+            messagebox.showerror("Error", "Certificate details not found.")
+
+    def toggle_image(self):
+        """Toggle visibility of the certificate image."""
+        if self.image_visible:
+            self.image_label.config(image="", text="No Image")
+        else:
+            selected_item = self.treeview.selection()
+            if selected_item:
+                self.display_certificate_details(None)
+        self.image_visible = not self.image_visible
+
+# Main execution
+if __name__ == "__main__":
+    root = tk.Tk()
+    blockchain = CertificateBlockchain()
+    app = CertificateApp(root, blockchain)
+    root.mainloop()
+
+
+* add option of zoom when of the image of certificate  when you click on show button  
+ * add also the button to show and hide qr code
+set picture inteface to 450*300
+set qr interface to 450 * 300 
+for this cod an image and qr are seing a small partie in his interface; add the cod that will help to see all qr and all image but with a reduce zoom
+
+add this correction and rewhrite all the code :
